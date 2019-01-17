@@ -33,6 +33,7 @@
 #include "lwip/err.h"
 #include "lwip/sys.h"
 #include "app_wifi.h"
+#include "sdkconfig.h"
 
 static const char *TAG = "app_wifi";
 

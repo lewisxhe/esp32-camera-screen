@@ -28,18 +28,12 @@
 #include "fb_gfx.h"
 
 #include "app_screen.h"
-// #include "image.h"
-
-// #include <errno.h>
-// #include <sys/stat.h>
-// #include <string.h>
-// #include "freertos/FreeRTOS.h"
-// #include "freertos/task.h"
-// #include "esp_system.h"
 #include "esp_log.h"
-// #include "lwip/sockets.h"
 
-static const char *TAG = "main";
+#include "app_sd.h"
+#include "app_sensor.h"
+
+static const char *TAG = "[main]";
 
 en_fsm_state g_state = WAIT_FOR_WAKEUP;
 int g_is_enrolling = 0;
@@ -47,6 +41,7 @@ int g_is_deleting = 0;
 
 
 extern CEspLcd *tft;
+static struct bme280_dev dev;
 
 #if 1
 
@@ -67,12 +62,6 @@ extern CEspLcd *tft;
 face_id_list st_face_list = {0};
 dl_matrix3du_t *aligned_face = NULL;
 
-/**
- * @brief  Face
- * @note
- * @param  number:
- * @retval
- */
 static const char *number_suffix(int32_t number)
 {
     uint8_t n = number % 10;
@@ -155,28 +144,16 @@ static void draw_face_boxes(dl_matrix3du_t *image_matrix, box_array_t *boxes)
 
 static void facenet_stream(void)
 {
+    int face_id = -1;
     esp_err_t res = ESP_OK;
     g_state = START_DETECT;
-    int16_t __height, __witdh;
     camera_fb_t *fb = NULL;
     size_t _jpg_buf_len = 0;
     uint8_t *_jpg_buf = NULL;
     dl_matrix3du_t *image_matrix = NULL;
 
-    int face_id = -1;
-
-    // int64_t fr_start = 0;
-    // int64_t fr_ready = 0;
-    // int64_t fr_face = 0;
-    // int64_t fr_recognize = 0;
-    // int64_t fr_encode = 0;
 
     mtmn_config_t mtmn_config = mtmn_init_config();
-
-    static int64_t last_frame = 0;
-    if (!last_frame) {
-        last_frame = esp_timer_get_time();
-    }
 
     ESP_LOGI(TAG, "Get count %d\n", st_face_list.count);
 
@@ -211,13 +188,6 @@ static void facenet_stream(void)
             break;
         }
 
-        __height = fb->height;
-        __witdh = fb->width;
-        // fr_start = esp_timer_get_time();
-        // fr_ready = fr_start;
-        // fr_face = fr_start;
-        // fr_encode = fr_start;
-        // fr_recognize = fr_start;
         image_matrix = dl_matrix3du_alloc(1, fb->width, fb->height, 3);
         if (!image_matrix) {
             ESP_LOGE(TAG, "dl_matrix3du_alloc failed");
@@ -227,17 +197,9 @@ static void facenet_stream(void)
 
         if (!fmt2rgb888(fb->buf, fb->len, fb->format, image_matrix->item)) {
             ESP_LOGW(TAG, "fmt2rgb888 failed");
-            //res = ESP_FAIL;
-            //dl_matrix3du_free(image_matrix);
-            //break;
         }
 
-        // fr_ready = esp_timer_get_time();
         box_array_t *net_boxes = face_detect(image_matrix, &mtmn_config);
-        // fr_face = esp_timer_get_time();
-        // Detection End
-
-        // fr_recognize = fr_face;
         if (net_boxes) {
             ESP_LOGI(TAG, "g_state : %u ", g_state);
             if ((g_state == START_ENROLL || g_state == START_RECOGNITION)
@@ -251,7 +213,6 @@ static void facenet_stream(void)
                              st_face_list.tail,
                              ENROLL_CONFIRM_TIMES - left_sample_face,
                              number_suffix(ENROLL_CONFIRM_TIMES - left_sample_face));
-                    // gpio_set_level(GPIO_LED_RED, 0);
                     rgb_printf(image_matrix, FACE_COLOR_CYAN, "\nThe %u%s sample",
                                ENROLL_CONFIRM_TIMES - left_sample_face,
                                number_suffix(ENROLL_CONFIRM_TIMES - left_sample_face));
@@ -266,7 +227,6 @@ static void facenet_stream(void)
                     face_id = recognize_face(&st_face_list, aligned_face);
 
                     if (face_id >= 0) {
-                        // gpio_set_level(GPIO_LED_RED, 1);
                         rgb_printf(image_matrix, FACE_COLOR_GREEN, "Hello ID %u", face_id);
                         ESP_LOGI(TAG, "Hello ID %u", face_id);
                     } else {
@@ -280,7 +240,6 @@ static void facenet_stream(void)
             free(net_boxes->landmark);
             free(net_boxes);
 
-            // fr_recognize = esp_timer_get_time();
             if (!fmt2jpg(image_matrix->item, fb->width * fb->height * 3, fb->width, fb->height, PIXFORMAT_RGB888, 90, &_jpg_buf, &_jpg_buf_len)) {
                 ESP_LOGE(TAG, "fmt2jpg failed");
                 dl_matrix3du_free(image_matrix);
@@ -291,21 +250,9 @@ static void facenet_stream(void)
         } else {
             _jpg_buf = fb->buf;
             _jpg_buf_len = fb->len;
-            //
-            // tft->drawBitmapnotswap(0, 0, (const uint16_t *)_jpg_buf, __witdh, __height);
         }
         dl_matrix3du_free(image_matrix);
-        // fr_encode = esp_timer_get_time();
-
-        TFT_jpg_image(CENTER, CENTER, 0, _jpg_buf, _jpg_buf_len);
-        // uint8_t *out = NULL;
-        // size_t outlen = 0;
-        // if (fmt2bmp(_jpg_buf, _jpg_buf_len, __witdh, __height, PIXFORMAT_JPEG, &out, &outlen)) {
-        //     tft->drawBitmapnotswap(0, 0, (const uint16_t *)out, __witdh, __height);
-        //     free(out);
-        //     out = NULL;
-        // }
-
+        TFT_jpg_image(CENTER, CENTER, 0, -1, NULL, _jpg_buf, _jpg_buf_len);
 
         if (fb) {
             esp_camera_fb_return(fb);
@@ -318,24 +265,7 @@ static void facenet_stream(void)
         if (res != ESP_OK) {
             break;
         }
-        // int64_t fr_end = esp_timer_get_time();
-
-        // int64_t ready_time = (fr_ready - fr_start) / 1000;
-        // int64_t face_time = (fr_face - fr_ready) / 1000;
-        // int64_t recognize_time = (fr_recognize - fr_face) / 1000;
-        // int64_t encode_time = (fr_encode - fr_recognize) / 1000;
-        // int64_t process_time = (fr_encode - fr_start) / 1000;
-
-        // int64_t frame_time = fr_end - last_frame;
-        // last_frame = fr_end;
-        // frame_time /= 1000;
-        // ESP_LOGD(TAG, "MJPG: %uKB %ums (%.1ffps), %u+%u+%u+%u=%u",
-        //          (uint32_t)(_jpg_buf_len / 1024),
-        //          (uint32_t)frame_time, 1000.0 / (uint32_t)frame_time,
-        //          (uint32_t)ready_time, (uint32_t)face_time, (uint32_t)recognize_time, (uint32_t)encode_time, (uint32_t)process_time);
     }
-
-    last_frame = 0;
     g_state = WAIT_FOR_WAKEUP;
 }
 
@@ -348,7 +278,7 @@ void test_camera()
         if (!fb) {
             ESP_LOGE(TAG, "Camera capture failed");
         } else {
-            TFT_jpg_image(CENTER, CENTER, 0, fb->buf, fb->len);
+            TFT_jpg_image(CENTER, CENTER, 0, -1, NULL, fb->buf, fb->len);
             // tft->drawBitmapnotswap(0, 0, (const uint16_t *)fb->buf, (int16_t)fb->width, (int16_t)fb->height);
             esp_camera_fb_return(fb);
             fb = NULL;
@@ -362,31 +292,72 @@ void app_lcd_task(void *pvParameters)
     // facenet_stream();
 }
 
-extern "C"  void darwPicture(uint8_t *buf, int16_t width, int height)
+void show_data()
 {
-    tft->drawBitmapnotswap(0, 0, (const uint16_t *)buf, (int16_t)width, (int16_t)height);
+    char buff[512];
+    struct bme280_data comp_data;
+
+    while (1) {
+
+        int8_t rslt = bme280_get_sensor_data(BME280_ALL, &comp_data, &dev);
+        if (rslt != BME280_OK) {
+            return;
+        }
+
+        if (g_state != WAIT_FOR_WAKEUP) {
+            app_sensor_deinit(&dev);
+            return;
+        }
+
+        tft->fillScreen(0);
+        snprintf(buff, sizeof(buff), "Temp    :%0.2f", comp_data.temperature);
+        tft->drawString(buff, 0, 30);
+        snprintf(buff, sizeof(buff), "Pressure:%0.2f", comp_data.pressure);
+        tft->drawString(buff, 0, 60);
+        snprintf(buff, sizeof(buff), "Humidity:%0.2f", comp_data.humidity);
+        tft->drawString(buff, 0, 90);
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+    }
 }
 
 extern "C"  void app_main()
 {
-    app_lcd_init();
+    char buff[128];
+    bool isInitBus;
+
+    ESP_LOGI("esp-eye", "Version "VERSION);
+
+    isInitBus = app_sd_init();
+
+    app_lcd_init(!isInitBus);
+
+    // if (isInitBus) {
+    //     FILE stream;
+    //     sdmmc_card_t card
+    //     sdmmc_card_print_info(NULL, &card);
+    //     snprintf(buff, sizeof(buff), "Type:%s", card.cid.name);
+    // } else {
+    //     tft->drawString("SDCard Mount Fail", 0, 90);
+    // }
+
+    app_camera_init();
 
     app_speech_wakeup_init();
 
     g_state = WAIT_FOR_WAKEUP;
 
-    vTaskDelay(30 / portTICK_PERIOD_MS);
+    app_sensor_init(&dev);
+
+    show_data();
+
+    vTaskDelay(3000 / portTICK_PERIOD_MS);
 
     tft->drawString("Please say 'Hi LeXin' to the board", 0, 30);
-
-    ESP_LOGI("esp-eye", "Version "VERSION);
 
     while (g_state == WAIT_FOR_WAKEUP)
         vTaskDelay(1000 / portTICK_PERIOD_MS);
 
     app_wifi_init();
-
-    app_camera_init();
 
     xTaskCreatePinnedToCore(app_lcd_task, "app_lcd_task", 4096, NULL, 4, NULL, 0);
 

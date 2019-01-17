@@ -64,7 +64,7 @@
 #define Y7_GPIO_NUM       38
 #define Y6_GPIO_NUM       39
 #define Y5_GPIO_NUM       35
-#define Y4_GPIO_NUM       26//14
+#define Y4_GPIO_NUM       26
 #define Y3_GPIO_NUM       13
 #define Y2_GPIO_NUM       34
 #define VSYNC_GPIO_NUM    5
