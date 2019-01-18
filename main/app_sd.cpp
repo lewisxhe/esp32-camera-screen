@@ -4,7 +4,7 @@
 #include "sdmmc_cmd.h"
 #define TAG "[SD]"
 
-bool app_sd_init()
+bool app_sd_init(sdmmc_card_t **card)
 {
     sdmmc_host_t host = SDSPI_HOST_DEFAULT();
 
@@ -15,10 +15,10 @@ bool app_sd_init()
     slot_config.gpio_cs   = (gpio_num_t)SD_CS;
 
 
-    gpio_set_pull_mode((gpio_num_t)SD_MISO, GPIO_PULLUP_ONLY);   
-    gpio_set_pull_mode((gpio_num_t)SD_MOSI, GPIO_PULLUP_ONLY);    
-    gpio_set_pull_mode((gpio_num_t)SD_CLK, GPIO_PULLUP_ONLY);   
-    gpio_set_pull_mode((gpio_num_t)SD_CS, GPIO_PULLUP_ONLY);   
+    gpio_set_pull_mode((gpio_num_t)SD_MISO, GPIO_PULLUP_ONLY);
+    gpio_set_pull_mode((gpio_num_t)SD_MOSI, GPIO_PULLUP_ONLY);
+    gpio_set_pull_mode((gpio_num_t)SD_CLK, GPIO_PULLUP_ONLY);
+    gpio_set_pull_mode((gpio_num_t)SD_CS, GPIO_PULLUP_ONLY);
 
 
     esp_vfs_fat_sdmmc_mount_config_t mount_config = {
@@ -27,8 +27,8 @@ bool app_sd_init()
         .allocation_unit_size = 16 * 1024
     };
 
-    sdmmc_card_t *card;
-    esp_err_t ret = esp_vfs_fat_sdmmc_mount("/sdcard", &host, &slot_config, &mount_config, &card);
+    // sdmmc_card_t *card;
+    esp_err_t ret = esp_vfs_fat_sdmmc_mount("/sdcard", &host, &slot_config, &mount_config, card);
 
     if (ret != ESP_OK) {
         if (ret == ESP_FAIL) {
@@ -42,7 +42,8 @@ bool app_sd_init()
     }
 
     // Card has been initialized, print its properties
-    sdmmc_card_print_info(stdout, card);
+    // if (*card)
+    //     sdmmc_card_print_info(stdout, *card);
 
     return true;
 }

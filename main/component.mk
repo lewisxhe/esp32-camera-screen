@@ -6,3 +6,5 @@
 # lib(subdirectory_name).a in the build directory. This behaviour is entirely configurable,
 # please read the SDK documents if you need to do this.
 #
+
+COMPONENT_EMBED_FILES := plus.jpg

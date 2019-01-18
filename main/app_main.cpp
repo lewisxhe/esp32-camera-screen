@@ -35,10 +35,14 @@
 
 static const char *TAG = "[main]";
 
+
+//Reference the binary-included jpeg file
+extern const uint8_t image_jpg_start[]   asm("_binary_plus_jpg_start");
+extern const uint8_t image_jpg_end[]     asm("_binary_plus_jpg_end");
+
 en_fsm_state g_state = WAIT_FOR_WAKEUP;
 int g_is_enrolling = 0;
 int g_is_deleting = 0;
-
 
 extern CEspLcd *tft;
 static struct bme280_dev dev;
@@ -309,36 +313,48 @@ void show_data()
             return;
         }
 
+
         tft->fillScreen(0);
+
+
         snprintf(buff, sizeof(buff), "Temp    :%0.2f", comp_data.temperature);
         tft->drawString(buff, 0, 30);
         snprintf(buff, sizeof(buff), "Pressure:%0.2f", comp_data.pressure);
         tft->drawString(buff, 0, 60);
         snprintf(buff, sizeof(buff), "Humidity:%0.2f", comp_data.humidity);
         tft->drawString(buff, 0, 90);
+
+
+
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 }
 
 extern "C"  void app_main()
 {
-    char buff[128];
     bool isInitBus;
+    sdmmc_card_t *card = NULL;
 
     ESP_LOGI("esp-eye", "Version "VERSION);
 
-    isInitBus = app_sd_init();
+    isInitBus = app_sd_init(&card);
 
     app_lcd_init(!isInitBus);
 
-    // if (isInitBus) {
-    //     FILE stream;
-    //     sdmmc_card_t card
-    //     sdmmc_card_print_info(NULL, &card);
-    //     snprintf(buff, sizeof(buff), "Type:%s", card.cid.name);
-    // } else {
-    //     tft->drawString("SDCard Mount Fail", 0, 90);
-    // }
+    int size = 28088;
+    TFT_jpg_image(CENTER, CENTER, 0, -1, NULL, (uint8_t*)image_jpg_start, size);
+
+    vTaskDelay(6000 / portTICK_PERIOD_MS);
+
+    tft->setTextSize(2);
+
+    if (isInitBus) {
+        tft->drawString("SDCard Mount PASS", 0, 90);
+    } else {
+        tft->drawString("SDCard Mount FAIL", 0, 90);
+    }
+
+    vTaskDelay(2000 / portTICK_PERIOD_MS);
 
     app_camera_init();
 
@@ -348,7 +364,7 @@ extern "C"  void app_main()
 
     app_sensor_init(&dev);
 
-    show_data();
+    show_data();    //BME280
 
     vTaskDelay(3000 / portTICK_PERIOD_MS);
 
