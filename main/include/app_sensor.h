@@ -6,6 +6,7 @@
 extern "C" {
 #endif
 
+bool setPowerBoostKeepOn(bool en);
 void app_sensor_init(struct bme280_dev *dev);
 void app_sensor_deinit(struct bme280_dev *dev);
 

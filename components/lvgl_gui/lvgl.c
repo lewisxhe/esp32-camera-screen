@@ -18,6 +18,7 @@
 
 /* LVGL includes */
 #include "iot_lvgl.h"
+#include "app_screen.h"
 
 // wait for execute lv_task_handler and lv_tick_inc to avoid some widget don't refresh.
 #define LVGL_INIT_DELAY 100 // unit ms
@@ -56,12 +57,7 @@ void lvgl_init()
     esp_timer_start_periodic(g_wifi_connect_timer, 1 * 1000U);
 
     /* Display interface */
-    lvgl_lcd_display_init(); /*Initialize your display*/
-
-#if defined(CONFIG_LVGL_DRIVER_TOUCH_SCREEN_ENABLE) || defined(CONFIG_LVGL_DRIVER_TOGGLE_ENABLE)
-    /* Input device interface */
-    lv_indev_drv_t indevdrv = lvgl_indev_init(); /*Initialize your indev*/
-#endif
+    lvgl_lcd_hal_init();
 
     esp_timer_create_args_t lv_task_timer_conf = {
         .callback = lv_task_timercb,
@@ -75,8 +71,4 @@ void lvgl_init()
 
     vTaskDelay(LVGL_INIT_DELAY / portTICK_PERIOD_MS);    // wait for execute lv_task_handler and lv_tick_inc to avoid some widget don't refresh.
 
-#ifdef CONFIG_LVGL_DRIVER_TOUCH_SCREEN_ENABLE
-    /* Calibrate touch screen */
-    lvgl_calibrate_mouse(indevdrv, false);
-#endif
 }

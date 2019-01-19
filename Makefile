@@ -3,7 +3,7 @@
 # project subdirectory.
 #
 
-PROJECT_NAME := recognition_http
+PROJECT_NAME := ttgo_camera_plus
 
 SOLUTION_PATH ?= $(abspath $(shell pwd))/../../..
 

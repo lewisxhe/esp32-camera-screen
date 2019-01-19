@@ -4,7 +4,7 @@
 #include "sdmmc_cmd.h"
 #define TAG "[SD]"
 
-bool app_sd_init(sdmmc_card_t **card)
+void app_sd_init(sdmmc_card_t **card)
 {
     sdmmc_host_t host = SDSPI_HOST_DEFAULT();
 
@@ -38,12 +38,10 @@ bool app_sd_init(sdmmc_card_t **card)
             ESP_LOGE(TAG, "Failed to initialize the card (%s). "
                      "Make sure SD card lines have pull-up resistors in place.", esp_err_to_name(ret));
         }
-        return false;
     }
 
     // Card has been initialized, print its properties
-    // if (*card)
-    //     sdmmc_card_print_info(stdout, *card);
+    if (*card)
+        sdmmc_card_print_info(stdout, *card);
 
-    return true;
 }

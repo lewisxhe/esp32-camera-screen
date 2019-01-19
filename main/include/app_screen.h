@@ -13,7 +13,8 @@ extern "C" {
 #define RIGHT  -9004
 #define BOTTOM -9004
 
-void app_lcd_init(bool isInitBus);
+
+void lvgl_lcd_hal_init();
 
 int TFT_bmp_image(int x, int y, uint8_t scale, char *fname, uint8_t *imgbuf, int size);
 

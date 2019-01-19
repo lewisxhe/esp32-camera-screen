@@ -1,48 +1,19 @@
-/* ESPRESSIF MIT License
- *
- * Copyright (c) 2018 <ESPRESSIF SYSTEMS (SHANGHAI) PTE LTD>
- *
- * Permission is hereby granted for use on all ESPRESSIF SYSTEMS products, in which case,
- * it is free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including
- * without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the Software is furnished
- * to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all copies or
- * substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
- * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
- * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
-
 #include "app_main.h"
 #include "esp_partition.h"
-
 #include "esp_log.h"
 #include "image_util.h"
 #include "fb_gfx.h"
-
 #include "app_screen.h"
 #include "esp_log.h"
-
 #include "app_sd.h"
 #include "app_sensor.h"
-
-/* lvgl includes */
 #include "iot_lvgl.h"
 
 static const char *TAG = "[main]";
 
-
-//Reference the binary-included jpeg file
 extern const uint8_t image_jpg_start[]   asm("_binary_plus_jpg_start");
 extern const uint8_t image_jpg_end[]     asm("_binary_plus_jpg_end");
-#define IMAGES_SIZE 28088
+#define IMAGES_SIZE 28827
 
 en_fsm_state g_state = WAIT_FOR_WAKEUP;
 int g_is_enrolling = 0;
@@ -50,9 +21,6 @@ int g_is_deleting = 0;
 
 extern CEspLcd *tft;
 static struct bme280_dev dev;
-
-#if 1
-
 
 #define FACE_COLOR_WHITE  0x00FFFFFF
 #define FACE_COLOR_BLACK  0x00000000
@@ -145,9 +113,6 @@ static void draw_face_boxes(dl_matrix3du_t *image_matrix, box_array_t *boxes)
         fb_gfx_drawFastVLine(&fb, x + w - 1, y, h, color);
     }
 }
-
-#endif
-
 
 
 static void facenet_stream(void)
@@ -278,58 +243,6 @@ static void facenet_stream(void)
 }
 
 
-
-void test_camera()
-{
-    while (1) {
-        camera_fb_t *fb = esp_camera_fb_get();
-        if (!fb) {
-            ESP_LOGE(TAG, "Camera capture failed");
-        } else {
-            TFT_jpg_image(CENTER, CENTER, 0, -1, NULL, fb->buf, fb->len);
-            // tft->drawBitmapnotswap(0, 0, (const uint16_t *)fb->buf, (int16_t)fb->width, (int16_t)fb->height);
-            esp_camera_fb_return(fb);
-            fb = NULL;
-        }
-    }
-}
-
-void app_lcd_task(void *pvParameters)
-{
-    test_camera();
-    // facenet_stream();
-}
-
-void show_data()
-{
-    char buff[512];
-    struct bme280_data comp_data;
-
-    while (1) {
-
-        int8_t rslt = bme280_get_sensor_data(BME280_ALL, &comp_data, &dev);
-        if (rslt != BME280_OK) {
-            return;
-        }
-        if (g_state != WAIT_FOR_WAKEUP) {
-            app_sensor_deinit(&dev);
-            return;
-        }
-        tft->fillScreen(0);
-
-#ifdef BME280_FLOAT_ENABLE
-        snprintf(buff, sizeof(buff), "Temp    :%0.2f", comp_data.temperature);
-        tft->drawString(buff, 0, 30);
-        snprintf(buff, sizeof(buff), "Pressure:%0.2f", comp_data.pressure);
-        tft->drawString(buff, 0, 60);
-        snprintf(buff, sizeof(buff), "Humidity:%0.2f", comp_data.humidity);
-        tft->drawString(buff, 0, 90);
-#endif
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-    }
-}
-
-
 static lv_obj_t *chart = NULL;
 static lv_obj_t *gauge = NULL;
 static lv_chart_series_t *series = NULL;
@@ -339,7 +252,7 @@ static lv_obj_t *label = NULL;
 static lv_obj_t *label1 = NULL;
 static lv_obj_t *label2 = NULL;
 
-static void littlevgl_demo(void)
+static void gui_init(void)
 {
     lv_obj_t *scr = lv_obj_create(NULL, NULL);
     lv_scr_load(scr);
@@ -353,18 +266,15 @@ static void littlevgl_demo(void)
     tabview = lv_tabview_create(lv_scr_act(), NULL);
 
     lv_obj_t *tab1 = lv_tabview_add_tab(tabview, "BME280");
-    // lv_obj_t *tab2 = lv_tabview_add_tab(tabview, SYMBOL_HOME);
-    // lv_obj_t *tab3 = lv_tabview_add_tab(tabview, SYMBOL_SETTINGS);
+    lv_obj_t *tab2 = lv_tabview_add_tab(tabview, "CAMERA");
 
     lv_tabview_set_tab_act(tabview, 0, false);
 
-    //曲线
     chart = lv_chart_create(tab1, NULL);
     lv_obj_set_size(chart, 240, 110);
     lv_chart_set_point_count(chart, 20);
     lv_obj_align(chart, NULL, LV_ALIGN_CENTER, 0, 0);
-    // lv_chart_set_type(chart, (lv_chart_type_t)(LV_CHART_TYPE_POINT | LV_CHART_TYPE_LINE));
-    lv_chart_set_type(chart, (lv_chart_type_t)LV_CHART_TYPE_COLUMN);
+    lv_chart_set_type(chart, (lv_chart_type_t)LV_CHART_TYPE_POINT | LV_CHART_TYPE_LINE);
 
     lv_chart_set_series_opa(chart, LV_OPA_70);
     lv_chart_set_series_width(chart, 4);
@@ -373,94 +283,133 @@ static void littlevgl_demo(void)
     series = lv_chart_add_series(chart, LV_COLOR_RED);
     series1 = lv_chart_add_series(chart, LV_COLOR_BLUE);
 
-    //仪表盘
-    // static lv_color_t needle_colors[] = {LV_COLOR_RED, LV_COLOR_BLUE, LV_COLOR_GREEN};
-    // gauge = lv_gauge_create(tab1, NULL);
-    // lv_gauge_set_needle_count(gauge,
-    //                           sizeof(needle_colors) / sizeof(needle_colors[0]), needle_colors);
-    // lv_obj_align(gauge, NULL, LV_ALIGN_CENTER, 0, 0);
-    // lv_gauge_set_value(gauge, 0, 50);
-    // lv_gauge_set_value(gauge, 1, 60);
-    // lv_gauge_set_value(gauge, 2, 60);
-
     label = lv_label_create(tabview, NULL);
-    lv_label_set_text(label, "1Hello Arduino!");
+
+    lv_label_set_text(label, "xxxxxxxxxxxxx");
     lv_obj_align(label, NULL, LV_ALIGN_OUT_BOTTOM_MID, 0,  -20);
 
     label1 = lv_label_create(tabview, NULL);
-    lv_label_set_text(label1, "2Hello Arduino!");
+    lv_label_set_text(label1, "xxxxxxxxxxxxx");
     lv_obj_align(label1, NULL, LV_ALIGN_OUT_BOTTOM_MID, 0, -40);
 
     label2 = lv_label_create(tabview, NULL);
-    lv_label_set_text(label2, "3Hello Arduino!");
+    lv_label_set_text(label2, "xxxxxxxxxxxxx");
     lv_obj_align(label2, NULL, LV_ALIGN_OUT_BOTTOM_MID, 0, -60);
 
-    // for (int i = 0; i < 4; i++) {
-    //     bme280lable[i] =  lv_label_create(tabview, NULL);
-    //     lv_label_set_text(bme280lable[i], "Hello Arduino!");
-    //     lv_obj_align(label, NULL, LV_ALIGN_IN_BOTTOM_MID, 0, i + 10);
-    // }
 }
 
 
-static void user_task(void *pvParameter)
+static void screen_task(void *pvParameter)
 {
-    uint8_t value = 0;
-    struct bme280_data comp_data;
     char buff[128];
+    struct bme280_data comp_data;
+    static int i = 0;
+
     while (1) {
-        int8_t rslt = bme280_get_sensor_data(BME280_ALL, &comp_data, &dev);
 
-        if (rslt != BME280_OK) {
-            vTaskDelay(500 / portTICK_PERIOD_MS);
-            ESP_LOGE(TAG, "BME280 read error");
-            continue;
-        }
         if (g_state != WAIT_FOR_WAKEUP) {
-            app_sensor_deinit(&dev);
-            vTaskDelete(NULL);
-            return;
+            i = i + 1 >= 2 ? 0 : i + 1;
+            lv_tabview_set_tab_act(tabview, i, true);
+            g_state = WAIT_FOR_WAKEUP;
+            vTaskDelay(1000 / portTICK_PERIOD_MS);
         }
 
-        lv_chart_set_next(chart, series, comp_data.temperature);
-        lv_chart_set_next(chart, series1, comp_data.humidity );
-        // ESP_LOGI(TAG, "temperature:%0.2f pressure:%0.2f humidity:%0.2f",
-        //          comp_data.temperature, comp_data.pressure, comp_data.humidity );
+        if (!i) {
 
-        snprintf(buff, sizeof(buff), "press:%0.2fhP", comp_data.pressure);
-        lv_label_set_text(label, buff);
+            int8_t rslt = bme280_get_sensor_data(BME280_ALL, &comp_data, &dev);
 
-        snprintf(buff, sizeof(buff), "hum  :%0.2f%%", comp_data.humidity);
-        lv_label_set_text(label1, buff);
+            if (rslt != BME280_OK) {
+                vTaskDelay(500 / portTICK_PERIOD_MS);
+                ESP_LOGE(TAG, "BME280 read error");
+                continue;
+            }
+            lv_chart_set_next(chart, series, comp_data.temperature);
+            lv_chart_set_next(chart, series1, comp_data.humidity );
+            snprintf(buff, sizeof(buff), "press:%0.2fPa", comp_data.pressure);
+            lv_label_set_text(label, buff);
 
-        snprintf(buff, sizeof(buff), "temp :%0.2f*C", comp_data.temperature);
-        lv_label_set_text(label2, buff);
+            snprintf(buff, sizeof(buff), "hum  :%0.2f%%", comp_data.humidity);
+            lv_label_set_text(label1, buff);
 
-        vTaskDelay(500 / portTICK_PERIOD_MS);
+            snprintf(buff, sizeof(buff), "temp :%0.2f*C", comp_data.temperature);
+            lv_label_set_text(label2, buff);
 
-        // static int i = 0;
-        // i = i + 1 > 3 ? 0 : i + 1;
-        // lv_tabview_set_tab_act(tabview, i, false);
+            vTaskDelay(500 / portTICK_PERIOD_MS);
+
+        } else {
+
+            camera_fb_t *fb = esp_camera_fb_get();
+            if (!fb) {
+                ESP_LOGE(TAG, "Camera capture failed");
+            } else {
+                TFT_jpg_image(CENTER, 50, 0, -1, NULL, fb->buf, fb->len);
+                esp_camera_fb_return(fb);
+                fb = NULL;
+            }
+        }
     }
 }
 
 
+void sdmmc_card_print_info(FILE* stream, const sdmmc_card_t* card)
+{
+    bool print_scr = false;
+    bool print_csd = false;
+    const char* type;
+    fprintf(stream, "Name: %s\n", card->cid.name);
+    if (card->is_sdio) {
+        type = "SDIO";
+        print_scr = true;
+        print_csd = true;
+    } else if (card->is_mmc) {
+        type = "MMC";
+        print_csd = true;
+    } else {
+        type = (card->ocr & SD_OCR_SDHC_CAP) ? "SDHC/SDXC" : "SDSC";
+    }
+    fprintf(stream, "Type: %s\n", type);
+    if (card->max_freq_khz < 1000) {
+        fprintf(stream, "Speed: %d kHz\n", card->max_freq_khz);
+    } else {
+        fprintf(stream, "Speed: %d MHz%s\n", card->max_freq_khz / 1000,
+                card->is_ddr ? ", DDR" : "");
+    }
+    fprintf(stream, "Size: %lluMB\n", ((uint64_t) card->csd.capacity) * card->csd.sector_size / (1024 * 1024));
+
+    if (print_csd) {
+        fprintf(stream, "CSD: ver=%d, sector_size=%d, capacity=%d read_bl_len=%d\n",
+                card->csd.csd_ver,
+                card->csd.sector_size, card->csd.capacity, card->csd.read_block_len);
+    }
+    if (print_scr) {
+        fprintf(stream, "SCR: sd_spec=%d, bus_width=%d\n", card->scr.sd_spec, card->scr.bus_width);
+    }
+}
+
 
 extern "C"  void app_main()
 {
-    bool isInitBus;
+
     sdmmc_card_t *card = NULL;
 
     ESP_LOGI("esp-eye", "Version "VERSION);
 
-    isInitBus = app_sd_init(&card);
+    app_sd_init(&card);
 
 #if 1
     app_camera_init();
 
     lvgl_init();
 
-    littlevgl_demo();
+    TFT_jpg_image(CENTER, CENTER, 0, -1, NULL, (uint8_t *)image_jpg_start, IMAGES_SIZE);
+
+    vTaskDelay(3000 / portTICK_PERIOD_MS);
+
+    tft->fillScreen(0xFFFF);
+    lv_obj_t *label = lv_label_create(lv_scr_act(), NULL);
+    lv_label_set_text(label, "Hello !");
+    lv_obj_align(label, NULL, LV_ALIGN_CENTER, 0, 0);
+    vTaskDelay(3000 / portTICK_PERIOD_MS);
 
     app_speech_wakeup_init();
 
@@ -468,9 +417,24 @@ extern "C"  void app_main()
 
     app_sensor_init(&dev);
 
+    tft->fillScreen(0xFFFF);
+    if (setPowerBoostKeepOn(1)) {  //true set power keep on
+        lv_label_set_text(label, "Power set keep On PASS");
+        lv_obj_align(label, NULL, LV_ALIGN_CENTER, 0, 0);
+        vTaskDelay(3000 / portTICK_PERIOD_MS);
+    } else {
+        lv_label_set_text(label, "Power set keep On FAIL");
+        lv_obj_align(label, NULL, LV_ALIGN_CENTER, 0, 0);
+        vTaskDelay(3000 / portTICK_PERIOD_MS);
+    }
+
+    lv_obj_del(label);
+
+    gui_init();
+
     xTaskCreate(
-        user_task,   //Task Function
-        "user_task", //Task Name
+        screen_task,   //Task Function
+        "screen_task", //Task Name
         4096,        //Stack Depth
         NULL,        //Parameters
         1,           //Priority

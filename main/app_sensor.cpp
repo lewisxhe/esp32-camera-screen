@@ -14,6 +14,14 @@
 #define I2C_MASTER_RX_BUF_DISABLE 0 /*!< I2C master do not need buffer */
 #define I2C_MASTER_FREQ_HZ 100000   /*!< I2C master clock frequency */
 
+#define IP5306_ADDR         0X75
+#define IP5306_REG_SYS_CTL0 0x00
+
+
+
+
+
+
 void user_delay_ms(uint32_t period)
 {
     vTaskDelay(period / portTICK_PERIOD_MS);
@@ -103,10 +111,13 @@ int8_t stream_sensor_data_normal_mode(struct bme280_dev *dev)
 
 void app_sensor_deinit(struct bme280_dev *dev)
 {
-    bme280_set_sensor_mode(BME280_SLEEP_MODE,dev);
-    
+    bme280_set_sensor_mode(BME280_SLEEP_MODE, dev);
+
     i2c_driver_delete((i2c_port_t)I2C_MASTER_NUM);
 }
+
+
+
 
 void app_sensor_init(struct bme280_dev *dev)
 {
@@ -143,4 +154,11 @@ void app_sensor_init(struct bme280_dev *dev)
         return;
     }
     stream_sensor_data_normal_mode(dev);
+}
+
+
+bool setPowerBoostKeepOn(bool en)
+{
+    uint8_t val  = en ? 0x37 : 0x35;    
+    return user_i2c_write(IP5306_ADDR, IP5306_REG_SYS_CTL0, &val, 1) == ESP_OK;
 }
