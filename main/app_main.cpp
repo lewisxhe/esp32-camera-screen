@@ -350,43 +350,6 @@ static void screen_task(void *pvParameter)
     }
 }
 
-
-void sdmmc_card_print_info(FILE* stream, const sdmmc_card_t* card)
-{
-    bool print_scr = false;
-    bool print_csd = false;
-    const char* type;
-    fprintf(stream, "Name: %s\n", card->cid.name);
-    if (card->is_sdio) {
-        type = "SDIO";
-        print_scr = true;
-        print_csd = true;
-    } else if (card->is_mmc) {
-        type = "MMC";
-        print_csd = true;
-    } else {
-        type = (card->ocr & SD_OCR_SDHC_CAP) ? "SDHC/SDXC" : "SDSC";
-    }
-    fprintf(stream, "Type: %s\n", type);
-    if (card->max_freq_khz < 1000) {
-        fprintf(stream, "Speed: %d kHz\n", card->max_freq_khz);
-    } else {
-        fprintf(stream, "Speed: %d MHz%s\n", card->max_freq_khz / 1000,
-                card->is_ddr ? ", DDR" : "");
-    }
-    fprintf(stream, "Size: %lluMB\n", ((uint64_t) card->csd.capacity) * card->csd.sector_size / (1024 * 1024));
-
-    if (print_csd) {
-        fprintf(stream, "CSD: ver=%d, sector_size=%d, capacity=%d read_bl_len=%d\n",
-                card->csd.csd_ver,
-                card->csd.sector_size, card->csd.capacity, card->csd.read_block_len);
-    }
-    if (print_scr) {
-        fprintf(stream, "SCR: sd_spec=%d, bus_width=%d\n", card->scr.sd_spec, card->scr.bus_width);
-    }
-}
-
-
 extern "C"  void app_main()
 {
 
@@ -394,7 +357,7 @@ extern "C"  void app_main()
 
     ESP_LOGI("esp-eye", "Version "VERSION);
 
-    app_sd_init(&card);
+    bool isTrue = app_sd_init(&card);
 
 #if 1
     app_camera_init();
@@ -408,6 +371,17 @@ extern "C"  void app_main()
     tft->fillScreen(0xFFFF);
     lv_obj_t *label = lv_label_create(lv_scr_act(), NULL);
     lv_label_set_text(label, "Hello !");
+    lv_obj_align(label, NULL, LV_ALIGN_CENTER, 0, 0);
+    vTaskDelay(3000 / portTICK_PERIOD_MS);
+
+
+    char buff[256];
+    if (isTrue) {
+        snprintf(buff, sizeof(buff), "SD Size: %lluMB\n", ((uint64_t) card->csd.capacity) * card->csd.sector_size / (1024 * 1024));
+    } else {
+        snprintf(buff, sizeof(buff), "SD Card not the found");
+    }
+    lv_label_set_text(label, buff);
     lv_obj_align(label, NULL, LV_ALIGN_CENTER, 0, 0);
     vTaskDelay(3000 / portTICK_PERIOD_MS);
 

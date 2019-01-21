@@ -9,7 +9,7 @@
 extern "C" {
 #endif
 
-void app_sd_init(sdmmc_card_t **card);
+bool app_sd_init(sdmmc_card_t **card);
 
 
 
