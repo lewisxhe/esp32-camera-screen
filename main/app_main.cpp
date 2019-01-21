@@ -8,6 +8,7 @@
 #include "app_sd.h"
 #include "app_sensor.h"
 #include "iot_lvgl.h"
+#include "app_httpd.h"
 
 static const char *TAG = "[main]";
 
@@ -21,7 +22,10 @@ int g_is_deleting = 0;
 
 extern CEspLcd *tft;
 static struct bme280_dev dev;
+EventGroupHandle_t evGroup;
 
+
+#if 0
 #define FACE_COLOR_WHITE  0x00FFFFFF
 #define FACE_COLOR_BLACK  0x00000000
 #define FACE_COLOR_RED    0x000000FF
@@ -241,6 +245,7 @@ static void facenet_stream(void)
     }
     g_state = WAIT_FOR_WAKEUP;
 }
+#endif
 
 
 static lv_obj_t *chart = NULL;
@@ -307,6 +312,9 @@ static void screen_task(void *pvParameter)
 
     while (1) {
 
+        xEventGroupWaitBits(evGroup, 1, pdFALSE, pdFALSE, portMAX_DELAY);
+
+
         if (g_state != WAIT_FOR_WAKEUP) {
             i = i + 1 >= 2 ? 0 : i + 1;
             lv_tabview_set_tab_act(tabview, i, true);
@@ -352,10 +360,33 @@ static void screen_task(void *pvParameter)
 
 extern "C"  void app_main()
 {
+    hal_i2c_init();
 
+    // app_sensor_init(&dev);
+
+    // // csccb_probe();
+
+    // // app_sensor_deinit(&dev);
+
+    // app_camera_init();
+
+    // ESP_LOGE(TAG,"Init Done .. ");
+
+    // while(1){
+
+    // }
+
+#if 1
     sdmmc_card_t *card = NULL;
 
     ESP_LOGI("esp-eye", "Version "VERSION);
+
+
+    if (!(evGroup = xEventGroupCreate())) {
+        ESP_LOGE(TAG,"evGroup Fail");
+        while (1);
+    }
+    xEventGroupSetBits(evGroup, 1);
 
     bool isTrue = app_sd_init(&card);
 
@@ -406,6 +437,10 @@ extern "C"  void app_main()
 
     gui_init();
 
+    app_wifi_init();
+
+    app_httpd_main();
+    
     xTaskCreate(
         screen_task,   //Task Function
         "screen_task", //Task Name
@@ -414,8 +449,7 @@ extern "C"  void app_main()
         1,           //Priority
         NULL);       //Task Handler
 
-    while (1);
-
+    // while (1);
 #else
     app_lcd_init(!isInitBus);
 
@@ -454,4 +488,7 @@ extern "C"  void app_main()
 
     xTaskCreatePinnedToCore(app_lcd_task, "app_lcd_task", 4096, NULL, 4, NULL, 0);
 #endif
+
+#endif
+
 }

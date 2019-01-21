@@ -1,5 +1,5 @@
 #include "app_camera.h"
-#include "app_httpserver.h"
+// #include "app_httpserver.h"
 #include "app_wifi.h"
 #include "app_speech_srcif.h"
 

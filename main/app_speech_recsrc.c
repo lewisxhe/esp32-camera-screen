@@ -14,6 +14,9 @@
 #include "esp_log.h"
 #include "esp_spiffs.h"
 #include "app_main.h"
+#include "freertos/event_groups.h"
+
+extern EventGroupHandle_t evGroup;
 
 static void i2s_init(void)
 {
@@ -50,6 +53,9 @@ void recsrcTask(void *arg)
     size_t read_len = 0;
 
     while(1) {
+
+        xEventGroupWaitBits(evGroup, 1, pdFALSE, pdFALSE, portMAX_DELAY);
+
         if (g_state != WAIT_FOR_WAKEUP)
         {
             vTaskDelay(1000 / portTICK_PERIOD_MS);
