@@ -1,7 +1,6 @@
 #ifndef _COM_GUI_LVGL_H
 #define _COM_GUI_LVGL_H
 
-#ifdef CONFIG_LVGL_GUI_ENABLE
 
 #ifdef __cplusplus
 extern "C"
@@ -27,6 +26,5 @@ void lvgl_init();
 }
 #endif
 
-#endif /* CONFIG_LVGL_GUI_ENABLE */
 
 #endif /* _COM_GUI_LVGL_H */

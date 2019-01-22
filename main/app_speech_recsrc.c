@@ -15,6 +15,7 @@
 #include "esp_spiffs.h"
 #include "app_main.h"
 #include "freertos/event_groups.h"
+#include "board_def.h"
 
 extern EventGroupHandle_t evGroup;
 

@@ -15,8 +15,9 @@
 #include "esp_sr_iface.h"
 #include "esp_sr_models.h"
 #include "app_main.h"
+#include "esp_log.h"
 
-#define SR_MODEL esp_sr_wakenet4_quantized  //esp_sr_wakenet3_quantized
+#define SR_MODEL   esp_sr_wakenet4_quantized//esp_sr_wakenet3_quantized //
 //esp_sr_wakenet2_float
 //sr_model_wakenet1_float
 //sr_model_wakenet1_quantized
@@ -28,6 +29,7 @@ static const esp_sr_iface_t *model = &SR_MODEL;
 static model_iface_data_t *model_data;
 
 QueueHandle_t sndQueue;
+extern EventGroupHandle_t evGroup;
 
 static void event_wakeup_detected(int r)
 {
@@ -43,12 +45,15 @@ void nnTask(void *arg)
     assert(buffer);
 
     while (1) {
+        xEventGroupWaitBits(evGroup, 1, pdFALSE, pdFALSE, portMAX_DELAY);
+
         xQueueReceive(sndQueue, buffer, portMAX_DELAY);
 
-        int r = model->detect(model_data, buffer);
-        if (r) {
-            event_wakeup_detected(r);
-        }
+        // int r = model->detect(model_data, buffer);
+        // if (r) {
+        //     event_wakeup_detected(r);
+        // }
+
     }
 
     free(buffer);

@@ -3,10 +3,6 @@
 #
 # (Uses default behaviour of compiling all source files in directory, adding 'include' to include path.)
 
-ifndef CONFIG_LVGL_GUI_ENABLE
-COMPONENT_ADD_INCLUDEDIRS := 
-COMPONENT_SRCDIRS := 
-else
 LVGLLIB = lvgl
 
 COMPONENT_SRCDIRS := . \
@@ -41,5 +37,3 @@ COMPONENT_PRIV_INCLUDEDIRS +=  . \
     $(LVGLLIB)/lv_fonts \
     $(LVGLLIB)/lv_objx \
     $(LVGLLIB)/lv_themes \
-
-endif  #CONFIG_LVGL_GUI_ENABLE

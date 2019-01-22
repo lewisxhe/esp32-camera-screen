@@ -5,10 +5,7 @@
 
 #define VERSION "0.9.0"
 
-#define IIS_SCLK    14//26  
-#define IIS_LCLK    32  //ws
-#define IIS_DSIN    -1
-#define IIS_DOUT    33
+
 
 typedef enum
 {
