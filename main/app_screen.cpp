@@ -2,7 +2,6 @@
 #include "app_screen.h"
 
 #include "rom/tjpgd.h"
-
 #include <errno.h>
 #include <sys/stat.h>
 #include <string.h>
@@ -12,7 +11,6 @@
 #include "esp_log.h"
 #include "lwip/sockets.h"
 
-// #include "app_main.h"
 
 #include "board_def.h"
 

@@ -18,14 +18,6 @@ void lvgl_lcd_hal_init();
 
 int TFT_bmp_image(int x, int y, uint8_t scale, char *fname, uint8_t *imgbuf, int size);
 
-#if 0
-void TFT_jpg_image(int x,
-                   int y,
-                   uint8_t scale,
-                   uint8_t *buf,
-                   uint32_t size);
-
-#else
 void TFT_jpg_image(int x,
                    int y,
                    uint8_t scale,
@@ -33,12 +25,6 @@ void TFT_jpg_image(int x,
                    char *filename,
                    uint8_t *buf,
                    int size);
-#endif
-// void TFT_jpg_image(int x,
-//                    int y,
-//                    uint8_t scale,
-//                    uint8_t *buf,
-//                    uint32_t size);
 
 #if __cplusplus
 }

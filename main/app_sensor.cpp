@@ -14,6 +14,7 @@
 
 #define IP5306_ADDR         0X75
 #define IP5306_REG_SYS_CTL0 0x00
+#define EXPANSION_SLAVE_ADDRESS 0x3F
 
 int8_t user_i2c_read(uint8_t dev_id, uint8_t reg_addr, uint8_t *reg_data, uint16_t len);
 int8_t user_i2c_write(uint8_t dev_id, uint8_t reg_addr, uint8_t *reg_data, uint16_t len);
@@ -205,3 +206,12 @@ bool setPowerBoostKeepOn(bool en)
     uint8_t val  = en ? 0x37 : 0x35;
     return user_i2c_write(IP5306_ADDR, IP5306_REG_SYS_CTL0, &val, 1) == ESP_OK;
 }
+
+
+void expansion_set(uint8_t val)
+{
+    if (i2c_write(EXPANSION_SLAVE_ADDRESS, val) != 0) {
+        ESP_LOGI("PCF", "PCF8574 Fail");
+    }
+}
+

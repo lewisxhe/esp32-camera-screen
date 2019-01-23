@@ -48,14 +48,11 @@ void nnTask(void *arg)
         xEventGroupWaitBits(evGroup, 1, pdFALSE, pdFALSE, portMAX_DELAY);
 
         xQueueReceive(sndQueue, buffer, portMAX_DELAY);
-
-        // int r = model->detect(model_data, buffer);
-        // if (r) {
-        //     event_wakeup_detected(r);
-        // }
-
+        int r = model->detect(model_data, buffer);
+        if (r) {
+            event_wakeup_detected(r);
+        }
     }
-
     free(buffer);
     vTaskDelete(NULL);
 }

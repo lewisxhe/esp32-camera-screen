@@ -9,7 +9,6 @@
 #include "app_sensor.h"
 #include "iot_lvgl.h"
 #include "app_httpd.h"
-#include "pcf8574.h"
 
 static const char *TAG = "[main]";
 
@@ -25,7 +24,7 @@ EventGroupHandle_t evGroup;
 //*********************************************************
 //*********************************************************
 //*********************************************************
-#define FACE_DETECT_IN_SCREEN
+// #define FACE_DETECT_IN_SCREEN
 
 #ifdef FACE_DETECT_IN_SCREEN
 #include "fd_forward.h"
@@ -186,10 +185,8 @@ static int run_face_recognition(dl_matrix3du_t *image_matrix, box_array_t *net_b
             matched_id = recognize_face(&id_list, aligned_face);
             if (matched_id >= 0) {
                 ESP_LOGW(TAG, "Match Face ID: %u", matched_id);
-                rgb_printf(image_matrix, FACE_COLOR_GREEN, "Hello Lewis %u", matched_id);
-                pcf8574_set(0x01);
+                rgb_printf(image_matrix, FACE_COLOR_GREEN, "Hello id %u", matched_id);
             } else {
-                pcf8574_set(0x02);
                 ESP_LOGW(TAG, "No Match Found");
                 rgb_print(image_matrix, FACE_COLOR_RED, "Who are you?");
                 matched_id = -1;
@@ -197,7 +194,6 @@ static int run_face_recognition(dl_matrix3du_t *image_matrix, box_array_t *net_b
         }
     } else {
         ESP_LOGW(TAG, "Face Not Aligned");
-        //rgb_print(image_matrix, FACE_COLOR_YELLOW, "Human Detected");
     }
 
     dl_matrix3du_free(aligned_face);
@@ -527,12 +523,11 @@ static void gui_init(void)
 
 }
 
-
 static void screen_task(void *pvParameter)
 {
     char buff[128];
     struct bme280_data comp_data;
-    static int i = 1;
+    static int i = 0;
 
     lv_tabview_set_tab_act(tabview, 0, true);
 
@@ -549,7 +544,7 @@ static void screen_task(void *pvParameter)
 
         if (!i) {
 
-            int8_t rslt = bme280_get_sensor_data(BME280_ALL, &comp_data, &dev);
+            int8_t rslt = bme280_get_sensor_data(BME280_ALL, &comp_data, &dev);  
 
             if (rslt != BME280_OK) {
                 vTaskDelay(500 / portTICK_PERIOD_MS);
@@ -587,22 +582,9 @@ static void screen_task(void *pvParameter)
     }
 }
 
-
 extern "C"  void app_main()
 {
     hal_i2c_init();
-
-    // i2c_probe();    //test
-
-    // while (1) {
-    //     for (int i = 0 ; i < 8 ; i++) {
-    //         pcf8574_set(1 << i);
-    //         ESP_LOGI(TAG, "i:0x%x", 1 << i);
-    //         vTaskDelay(1000 / portTICK_PERIOD_MS);
-    //         pcf8574_set(0);
-    //         vTaskDelay(1000 / portTICK_PERIOD_MS);
-    //     }
-    // }
 
     sdmmc_card_t *card = NULL;
 
@@ -667,18 +649,12 @@ extern "C"  void app_main()
     vTaskDelay(300 / portTICK_PERIOD_MS);
 
 #ifdef FACE_DETECT_IN_SCREEN
-    ra_filter_init(&ra_filter, 20);//
+    ra_filter_init(&ra_filter, 20);
 
     app_mhttpd_main();
 #else
     app_httpd_main();
 #endif
 
-    xTaskCreate(
-        screen_task,   //Task Function
-        "screen_task", //Task Name
-        4096,        //Stack Depth
-        NULL,        //Parameters
-        5,           //Priority
-        NULL);       //Task Handler
+    xTaskCreate(screen_task, "screen_task", 4096,NULL,5,NULL);
 }

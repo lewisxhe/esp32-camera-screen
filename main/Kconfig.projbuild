@@ -20,6 +20,6 @@ config MAX_STA_CONN
 
 config SERVER_IP
     string "IP address of server"
-    default "192.168.4.1"
+    default "2.2.2.1"
 
 endmenu

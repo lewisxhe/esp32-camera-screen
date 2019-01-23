@@ -46,25 +46,24 @@ void recsrcTask(void *arg)
 {
     i2s_init();
 
-    src_cfg_t *cfg=(src_cfg_t*)arg;
-    size_t samp_len = cfg->item_size*2*sizeof(int)/sizeof(int16_t);
+    src_cfg_t *cfg = (src_cfg_t *)arg;
+    size_t samp_len = cfg->item_size * 2 * sizeof(int) / sizeof(int16_t);
 
-    int *samp=malloc(samp_len);
+    int *samp = malloc(samp_len);
 
     size_t read_len = 0;
 
-    while(1) {
+    while (1) {
 
         xEventGroupWaitBits(evGroup, 1, pdFALSE, pdFALSE, portMAX_DELAY);
 
-        if (g_state != WAIT_FOR_WAKEUP)
-        {
+        if (g_state != WAIT_FOR_WAKEUP) {
             vTaskDelay(1000 / portTICK_PERIOD_MS);
             continue;
         }
 
         i2s_read(1, samp, samp_len, &read_len, portMAX_DELAY);
-        for (int x=0; x<cfg->item_size/4; x++) {
+        for (int x = 0; x < cfg->item_size / 4; x++) {
             int s1 = ((samp[x * 4] + samp[x * 4 + 1]) >> 13) & 0x0000FFFF;
             int s2 = ((samp[x * 4 + 2] + samp[x * 4 + 3]) << 3) & 0xFFFF0000;
             samp[x] = s1 | s2;
@@ -72,7 +71,6 @@ void recsrcTask(void *arg)
 
         xQueueSend(*cfg->queue, samp, portMAX_DELAY);
     }
-
     vTaskDelete(NULL);
 }
 

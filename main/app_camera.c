@@ -36,8 +36,8 @@ void app_camera_init()
     conf.intr_type = GPIO_INTR_DISABLE;
     conf.pin_bit_mask = 1LL << 13;
     gpio_config(&conf);
-    conf.pin_bit_mask = 1LL << 14;
-    gpio_config(&conf);
+    // conf.pin_bit_mask = 1LL << 14;
+    // gpio_config(&conf);
 
     camera_config_t config;
     config.ledc_channel = LEDC_CHANNEL_0;

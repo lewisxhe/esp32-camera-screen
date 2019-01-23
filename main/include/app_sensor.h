@@ -14,11 +14,12 @@ void app_sensor_init(struct bme280_dev *dev);
 void app_sensor_deinit(struct bme280_dev *dev);
 
 void i2c_probe();
-int i2c_write(uint8_t dev_id, uint8_t data);
 
 uint8_t csccb_probe();
 uint8_t csccb_write(uint8_t addr, uint8_t reg, uint8_t data);
 uint8_t csccb_read(uint8_t addr, uint8_t reg);
+
+void expansion_set(uint8_t val);
 
 #if __cplusplus
 }

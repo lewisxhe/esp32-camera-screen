@@ -27,7 +27,6 @@ bool app_sd_init(sdmmc_card_t **card)
         .allocation_unit_size = 16 * 1024
     };
 
-    // sdmmc_card_t *card;
     esp_err_t ret = esp_vfs_fat_sdmmc_mount("/sdcard", &host, &slot_config, &mount_config, card);
 
     if (ret != ESP_OK) {
@@ -41,8 +40,5 @@ bool app_sd_init(sdmmc_card_t **card)
         return false;
     }
 
-    // Card has been initialized, print its properties
-    // if (*card)
-    //     sdmmc_card_print_info(stdout, *card);
     return true;
 }
