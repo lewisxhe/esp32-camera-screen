@@ -24,7 +24,14 @@ EventGroupHandle_t evGroup;
 //*********************************************************
 //*********************************************************
 //*********************************************************
+/*
+Turn on the FACE_DETECT_IN_SCREEN macro, 
+face recognition will be displayed in the display, 
+and the microphone will be disabled. The web page will not be viewable. 
+Only face input and camera parameters can be adjusted.
+*/
 // #define FACE_DETECT_IN_SCREEN
+
 
 #ifdef FACE_DETECT_IN_SCREEN
 #include "fd_forward.h"
@@ -529,7 +536,10 @@ static void screen_task(void *pvParameter)
     struct bme280_data comp_data;
     static int i = 0;
 
-    lv_tabview_set_tab_act(tabview, 0, true);
+#ifdef FACE_DETECT_IN_SCREEN
+    i = 1;
+#endif
+    lv_tabview_set_tab_act(tabview, i, true);
 
     while (1) {
 
@@ -544,7 +554,7 @@ static void screen_task(void *pvParameter)
 
         if (!i) {
 
-            int8_t rslt = bme280_get_sensor_data(BME280_ALL, &comp_data, &dev);  
+            int8_t rslt = bme280_get_sensor_data(BME280_ALL, &comp_data, &dev);
 
             if (rslt != BME280_OK) {
                 vTaskDelay(500 / portTICK_PERIOD_MS);
@@ -623,7 +633,9 @@ extern "C"  void app_main()
     lv_obj_align(label, NULL, LV_ALIGN_CENTER, 0, 0);
     vTaskDelay(3000 / portTICK_PERIOD_MS);
 
+#ifndef FACE_DETECT_IN_SCREEN
     app_speech_wakeup_init();
+#endif
 
     g_state = WAIT_FOR_WAKEUP;
 
@@ -656,5 +668,5 @@ extern "C"  void app_main()
     app_httpd_main();
 #endif
 
-    xTaskCreate(screen_task, "screen_task", 4096,NULL,5,NULL);
+    xTaskCreate(screen_task, "screen_task", 4096, NULL, 5, NULL);
 }
