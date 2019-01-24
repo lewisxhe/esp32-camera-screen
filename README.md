@@ -13,12 +13,13 @@
 | User button | supported         | not supported        |
 | Core        | ESP32-WROVER-B    | ESP32-DOWDQ6         |
 | PSRAM       | 8MBytes           | 8MBytes              |
-| FLASH       | 4Mbytes           | 4Mbytes              |
+| FLASH       | 4MBytes           | 4MBytes              |
 | UART        | CP2104            | CP2104               |
 
 
-- The SCCB driver in esp-who uses the IO emulation method. I rewrote it to I2C to drive it so that I can mount multiple devices on the I2C bus and replace scbb.c in the SCCB directory with esp-who/components/ Esp32-camera/driver/sccb.c
+- The SCCB driver in esp-who uses the IO emulation method. I rewrote it to I2C to drive it so that I can mount multiple devices on the I2C bus ,Need to replace `sccp.c` in the SCCB directory with `esp-who/components/ Esp32-camera/driver/sccb.c`
 
+-At present, the program is not stable, and the wake-up of the voice conflicts with a certain part of the program. Since the voice wake-up code cannot be viewed, this problem cannot be solved. The code just demonstrates that the TTGO Camera Plus board hardware is intact.
 
 ## TTGO CAMERA PINS
 | Name  | Num    |
