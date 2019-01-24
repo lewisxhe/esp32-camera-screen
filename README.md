@@ -1,3 +1,8 @@
+# TTGO Camera Plus
+
+![](images/1.jpg)
+![](images/2.jpg)
+
 # TTGO Camera && TTGO Camera Plus
 
 | Function    | TTGO T-Câmera     | TTGO T-Câmera Plus   |
@@ -17,9 +22,14 @@
 | UART        | CP2104            | CP2104               |
 
 
-- The SCCB driver in esp-who uses the IO emulation method. I rewrote it to I2C to drive it so that I can mount multiple devices on the I2C bus ,Need to replace `sccp.c` in the SCCB directory with `esp-who/components/ Esp32-camera/driver/sccb.c`
 
--At present, the program is not stable, and the wake-up of the voice conflicts with a certain part of the program. Since the voice wake-up code cannot be viewed, this problem cannot be solved. The code just demonstrates that the TTGO Camera Plus board hardware is intact.
+- The SCCB driver in esp-who uses the IO emulation method. I rewrote it to I2C to drive it so that I can mount multiple devices on the I2C bus ,Need to replace `sccp.c` in the SCCB directory with `esp-who/components/esp32-camera/driver/sccb.c`
+
+- At present, the program is not stable, and the wake-up of the voice conflicts with a certain part of the program. Since the voice wake-up code cannot be viewed, this problem cannot be solved. The code just demonstrates that the TTGO Camera Plus board hardware is intact.
+
+- Since TTGO Camera Plus does not have physical buttons, face information entry will be entered on the web page.
+
+- Turn on the `FACE_DETECT_IN_SCREEN` macro(in main.cpp), face recognition will be displayed in the display, and the microphone will be disabled. The web page will not be viewable. Only face input and camera parameters can be adjusted.
 
 ## TTGO CAMERA PINS
 | Name  | Num    |
@@ -41,7 +51,7 @@
 | PWD   | No use |
 | RESET | No use |
 
-## BME280  Pins
+## BME280  & IP5306 Pins
 | Name | Num |
 | ---- | --- |
 | SDA  | 18  |
@@ -55,7 +65,7 @@
 | I2S_DOUT | 33     |
 | I2S_DIN  | No use |
 
-## TFT & SDCard Pins
+## TFT & SD Card Pins
 | Name   | Num |
 | ------ | --- |
 | MISO   | 22  |
@@ -65,3 +75,4 @@
 | TFT_CS | 12  |
 | TFT_BK | 2   |
 | SD_CS  | 0   |
+
