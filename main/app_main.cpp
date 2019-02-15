@@ -25,9 +25,9 @@ EventGroupHandle_t evGroup;
 //*********************************************************
 //*********************************************************
 /*
-Turn on the FACE_DETECT_IN_SCREEN macro, 
-face recognition will be displayed in the display, 
-and the microphone will be disabled. The web page will not be viewable. 
+Turn on the FACE_DETECT_IN_SCREEN macro,
+face recognition will be displayed in the display,
+and the microphone will be disabled. The web page will not be viewable.
 Only face input and camera parameters can be adjusted.
 */
 // #define FACE_DETECT_IN_SCREEN
@@ -594,6 +594,8 @@ static void screen_task(void *pvParameter)
 
 extern "C"  void app_main()
 {
+    char buff[256];
+
     hal_i2c_init();
 
     sdmmc_card_t *card = NULL;
@@ -608,6 +610,14 @@ extern "C"  void app_main()
     xEventGroupSetBits(evGroup, 1);
 
     bool isTrue = app_sd_init(&card);
+    if (isTrue) {
+        snprintf(buff, sizeof(buff), "SD Size: %lluMB\n", ((uint64_t) card->csd.capacity) * card->csd.sector_size / (1024 * 1024));
+        if (esp_vfs_fat_sdmmc_unmount() != ESP_OK) {
+            ESP_LOGE(TAG, "Unmount SDCard Fail");
+        }
+    } else {
+        snprintf(buff, sizeof(buff), "SD Card not the found");
+    }
 
     app_camera_init();
 
@@ -623,12 +633,6 @@ extern "C"  void app_main()
     lv_obj_align(label, NULL, LV_ALIGN_CENTER, 0, 0);
     vTaskDelay(3000 / portTICK_PERIOD_MS);
 
-    char buff[256];
-    if (isTrue) {
-        snprintf(buff, sizeof(buff), "SD Size: %lluMB\n", ((uint64_t) card->csd.capacity) * card->csd.sector_size / (1024 * 1024));
-    } else {
-        snprintf(buff, sizeof(buff), "SD Card not the found");
-    }
     lv_label_set_text(label, buff);
     lv_obj_align(label, NULL, LV_ALIGN_CENTER, 0, 0);
     vTaskDelay(3000 / portTICK_PERIOD_MS);
