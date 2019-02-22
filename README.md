@@ -9,7 +9,7 @@
 | ----------- | ----------------- | -------------------- |
 | MIC         | not supported     | supported            |
 | SDCard      | not supported     | supported            |
-| BME280      | supported         | supported            |
+| BME280      | supported         | ~~supported~~            |
 | Charging    | supported         | supported            |
 | I2C         | supported         | supported            |
 | Screen      | OLED SSD1306/0.96 | IPS Panel ST7789/1.3 |
@@ -30,6 +30,9 @@
 - Since TTGO Camera Plus does not have physical buttons, face information entry will be entered on the web page.
 
 - Turn on the `FACE_DETECT_IN_SCREEN` macro(in main.cpp), face recognition will be displayed in the display, and the microphone will be disabled. The web page will not be viewable. Only face input and camera parameters can be adjusted.
+
+## Board Modify
+- The Camera Plus version sold by TTGO will not have the BME280 sensor, because the temperature on the board affects the accuracy of the sensor. The default program does not enable the BME280 function. If necessary, turn on the `ENABLE_BME280` (on app_main.cpp line 35)
 
 ## TTGO CAMERA PINS
 | Name  | Num    |
