@@ -32,6 +32,9 @@ Only face input and camera parameters can be adjusted.
 */
 // #define FACE_DETECT_IN_SCREEN
 
+// #define ENABLE_BME280   //! Turning on the macro will launch the GUI and BME280 sensor
+
+
 
 #ifdef FACE_DETECT_IN_SCREEN
 #include "fd_forward.h"
@@ -288,7 +291,12 @@ static esp_err_t stream_handler()
             }
         }
         if (res != ESP_FAIL)
+
+#ifndef ENABLE_BME280
+            TFT_jpg_image(CENTER, 0, 0, -1, NULL, _jpg_buf, _jpg_buf_len);
+#else
             TFT_jpg_image(CENTER, 50, 0, -1, NULL, _jpg_buf, _jpg_buf_len);
+#endif
 
         if (fb) {
             esp_camera_fb_return(fb);
@@ -623,27 +631,15 @@ extern "C"  void app_main()
 
     lvgl_init();
 
-    TFT_jpg_image(CENTER, CENTER, 0, -1, NULL, (uint8_t *)image_jpg_start, IMAGES_SIZE);
+    // TFT_jpg_image(CENTER, CENTER, 0, -1, NULL, (uint8_t *)image_jpg_start, IMAGES_SIZE);
 
-    vTaskDelay(3000 / portTICK_PERIOD_MS);
+    // vTaskDelay(3000 / portTICK_PERIOD_MS);
 
     tft->fillScreen(0xFFFF);
     lv_obj_t *label = lv_label_create(lv_scr_act(), NULL);
-    lv_label_set_text(label, "Hello !");
-    lv_obj_align(label, NULL, LV_ALIGN_CENTER, 0, 0);
-    vTaskDelay(3000 / portTICK_PERIOD_MS);
-
     lv_label_set_text(label, buff);
     lv_obj_align(label, NULL, LV_ALIGN_CENTER, 0, 0);
     vTaskDelay(3000 / portTICK_PERIOD_MS);
-
-#ifndef FACE_DETECT_IN_SCREEN
-    app_speech_wakeup_init();
-#endif
-
-    g_state = WAIT_FOR_WAKEUP;
-
-    app_sensor_init(&dev);
 
     tft->fillScreen(0xFFFF);
     if (setPowerBoostKeepOn(1)) {  //true set power keep on
@@ -656,9 +652,31 @@ extern "C"  void app_main()
         vTaskDelay(3000 / portTICK_PERIOD_MS);
     }
 
+#ifndef FACE_DETECT_IN_SCREEN
+    app_speech_wakeup_init();
+#endif
+
+#ifndef ENABLE_BME280
+    app_speech_wakeup_init();
+#endif
+
+    g_state = WAIT_FOR_WAKEUP;
+
+#ifdef ENABLE_BME280
+    app_sensor_init(&dev);
+#else
+    lv_label_set_text(label, "Please say nihaotianmao!");
+    lv_obj_align(label, NULL, LV_ALIGN_CENTER, 0, 0);
+    while (g_state == WAIT_FOR_WAKEUP) {
+        vTaskDelay(10 / portTICK_PERIOD_MS);
+    }
+#endif
+
     lv_obj_del(label);
 
+#ifdef ENABLE_BME280
     gui_init();
+#endif
 
     app_wifi_init();
 
@@ -672,5 +690,24 @@ extern "C"  void app_main()
     app_httpd_main();
 #endif
 
+
+#ifndef ENABLE_BME280
+    while (1) {
+
+#ifdef FACE_DETECT_IN_SCREEN
+        stream_handler();
+#else
+        camera_fb_t *fb = esp_camera_fb_get();
+        if (!fb) {
+            ESP_LOGE(TAG, "Camera capture failed");
+        } else {
+            TFT_jpg_image(CENTER, 0, 0, -1, NULL, fb->buf, fb->len);
+            esp_camera_fb_return(fb);
+            fb = NULL;
+        }
+#endif
+    }
+#else
     xTaskCreate(screen_task, "screen_task", 4096, NULL, 5, NULL);
+#endif
 }
