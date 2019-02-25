@@ -9,7 +9,7 @@
 | ----------- | ----------------- | -------------------- |
 | MIC         | not supported     | supported            |
 | SDCard      | not supported     | supported            |
-| BME280      | supported         | ~~supported~~            |
+| BME280      | ~~supported~~         | ~~supported~~            |
 | Charging    | supported         | supported            |
 | I2C         | supported         | supported            |
 | Screen      | OLED SSD1306/0.96 | IPS Panel ST7789/1.3 |
