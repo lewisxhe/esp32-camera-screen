@@ -687,7 +687,7 @@ extern "C"  void app_main()
 
     app_mhttpd_main();
 #else
-    app_httpd_main();
+    // app_httpd_main();
 #endif
 
 
