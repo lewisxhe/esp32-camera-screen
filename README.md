@@ -33,13 +33,13 @@
 
 ## Board Modify
 - The Camera Plus version sold by TTGO will not have the BME280 sensor, because the temperature on the board affects the accuracy of the sensor. The default program does not enable the BME280 function. If necessary, turn on the `ENABLE_BME280` (on app_main.cpp line 35)
-
+- In a separate screen display, the wifi hotspot is only turned on, and the connection does not respond.
 ## TTGO CAMERA PINS
 | Name  | Num    |
 | ----- | ------ |
 | Y9    | 36     |
 | Y8    | 37     |
-| Y7    | 28     |
+| Y7    | 38     |
 | Y6    | 39     |
 | Y5    | 35     |
 | Y4    | 26     |
