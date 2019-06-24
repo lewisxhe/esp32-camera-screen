@@ -22,8 +22,10 @@
 | UART        | CP2104            | CP2104               |
 
 
+- Many people can't compile because I am compiling with the latest ESP-WHO. With the update of the official framework, some files may be removed. I re-updated to the latest framework, commit id : 258751b5b615ffdc2e0f43f8815b6ffbaeb3da03
+    As the framework update may not be able to compile smoothly, please go back to the ESP-WHO **258751b5b615ffdc2e0f43f8815b6ffbaeb3da03** repository to compile.
 
-- The SCCB driver in esp-who uses the IO emulation method. I rewrote it to I2C to drive it so that I can mount multiple devices on the I2C bus ,Need to replace `sccp.c` in the SCCB directory with `esp-who/components/esp32-camera/driver/sccb.c`
+- ~~The SCCB driver in esp-who uses the IO emulation method. I rewrote it to I2C to drive it so that I can mount multiple devices on the I2C bus ,Need to replace `sccp.c` in the SCCB directory with `esp-who/components/esp32-camera/driver/sccb.c`~~ (Esp-who is now configured by default as a hardware I2C driver)
 
 - At present, the program is not stable, and the wake-up of the voice conflicts with a certain part of the program. Since the voice wake-up code cannot be viewed, this problem cannot be solved. The code just demonstrates that the TTGO Camera Plus board hardware is intact.
 
@@ -79,7 +81,24 @@
 | TFT_BK | 2   |
 | SD_CS  | 0   |
 
+=========================================
+
+### If you can't compile smoothly, please follow the steps below. If you still can't compile, please issue an issue.
+
+- git clone --recursive https://github.com/espressif/esp-who.git 
+- git checkout 258751b5b615ffdc2e0f43f8815b6ffbaeb3da03
+- cd examples/single_chip/
+- git clone https://github.com/lewisxhe/esp32-camera-screen.git
+- cd esp32-camera-screen
+- make menuconfig
+- make -j
+
+
 ## External extension
 ![](images/3.gif)
 ## Test Video
 [YouTube](https://youtu.be/vVHurYwPiqI)
+
+
+
+

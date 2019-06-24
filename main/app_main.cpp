@@ -604,7 +604,8 @@ extern "C"  void app_main()
 {
     char buff[256];
 
-    hal_i2c_init();
+    //! Esp-who is now configured by default as a hardware I2C driver
+    // hal_i2c_init();
 
     sdmmc_card_t *card = NULL;
 
